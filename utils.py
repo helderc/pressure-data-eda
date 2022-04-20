@@ -41,11 +41,11 @@ def plot_pressures(press_dict,
         if k == '$\mu$' or k == 'mean':
             color = 'gray' 
             ls = '--'
-            lw = 0.7
+            lw = 1
         else:
             color = c[i]
             ls = '-'
-            lw = 1.2
+            lw = 3
         plt.plot(x, val, c=color, ls=ls, lw=lw, label=k)
 
     if (shaded_areas is not None):
@@ -62,6 +62,7 @@ def plot_pressures(press_dict,
     plt.xticks(np.arange(0,len(x),10))
     plt.title(title);
     plt.legend()
+    plt.grid(ls='--')
     
     plt.xlim([0, len(x)-1]);
     
