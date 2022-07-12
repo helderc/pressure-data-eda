@@ -1,5 +1,4 @@
-# pressure data eda
-Pressure Data Exploratory Data Analysis
+# Pressure Data Exploratory Data Analysis
 
 
 ## Stroke Unit Data: How to properly load it
