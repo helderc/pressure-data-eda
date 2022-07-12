@@ -12,8 +12,11 @@ Pressure Data Exploratory Data Analysis
 3. The .csv can be used directly in my code (function ut.clean_csv(...)) to be cleaned. The output is also a .csv.
 
 4. I also use two other functions to load the 'clean' csv and save it as a pickle file (.pkl), which is shorter and very fast to load:
+
 	`pres_dat = ut.read_csv_data(base_fn + '_csv_clean.csv')`
+	
     `ut.data_to_pkl(pres_dat, base_fn + '_pkl.pkl')`
 	
 5. After that to load the data is as easy as:
+
 	`press_data = ut.load_pkl(base_fn + '_pkl.pkl')`
