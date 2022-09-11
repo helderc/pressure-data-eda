@@ -21,7 +21,49 @@ import pickle as pkl
 from scipy.ndimage.interpolation import rotate
 import xlrd # use version 1.2
 from skimage.morphology import area_opening, convex_hull_image, convex_hull_object
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
+    
+def anomaly_detection(data_dict, contamination=1e-10):
+    df = pd.DataFrame.from_dict(data_dict)
 
+    model = IsolationForest(contamination=contamination) # 0-0.5 or 'auto'
+    scl = StandardScaler()
+
+    scl_lr = scl.fit_transform(np.reshape(df['LR'].values, (-1,1)))
+    pred = model.fit_predict(scl_lr) # outlier is -1, inlier is 1
+    aLR = df.loc[pred == -1, ['LR']]
+
+    scl_ll = scl.fit_transform(np.reshape(df['LL'].values, (-1,1)))
+    pred = model.predict(scl_ll)
+    aLL = df.loc[pred == -1, ['LL']]
+
+    scl_ur = scl.fit_transform(np.reshape(df['UR'].values, (-1,1)))
+    pred = model.predict(scl_ur)
+    aUR = df.loc[pred == -1, ['UR']]
+
+    scl_ul = scl.fit_transform(np.reshape(df['UL'].values, (-1,1)))
+    pred = model.predict(scl_ul)
+    aUL = df.loc[pred == -1, ['UL']]
+    
+    fig, ax = plt.subplots(figsize=(16,4))
+    ax.plot(df.index, df['LR'], color='m', label = 'LR')
+    ax.plot(df.index, df['LL'], color='blue', label = 'LL')
+    ax.plot(df.index, df['UR'], color='green', label = 'UR')
+    ax.plot(df.index, df['UL'], color='red', label = 'UR')
+
+    ax.scatter(aLR.index, aLR['LR'], color='red', linewidths=3, label = 'Anomaly')
+    ax.scatter(aLL.index, aLL['LL'], color='red', linewidths=3)
+    ax.scatter(aUR.index, aUR['UR'], color='red', linewidths=3)
+    ax.scatter(aUL.index, aUL['UL'], color='red', linewidths=3)
+
+    plt.xlim([0, len(df['LR'])])
+    #plt.ylim([0, 0.13])
+    plt.legend()
+    plt.show();
+    
+    
+    
 
 def plot_pressures(press_dict, 
                    shaded_areas=None, 
@@ -251,10 +293,32 @@ def left_right_analysis(data, frames_pts, dataset='PMat'):
     return left_means, right_means
 
 
-def quadrant_analysis(data, pts, dataset='PMat'):
-    means = {}
-    means['UL'], means['LL'] = [], []
-    means['UR'], means['LR'] = [], []
+def relative_movement(data, measures, dataset='PMat'):
+    '''
+    Calculate the relative movement by dividing the left by the right side
+    
+    measures: 
+    '''
+    #TODO: Include the parameter to decide between left/right (default) or right/left
+    res = {}
+    
+    #left = np.concatenate((np.divide(measures['UL'], np.divide(measures['LL']))
+    #right = np.concatenate((np.divide(measures['UR'], np.divide(measures['LR']))
+    
+    res['U'] = np.divide(measures['UL'], measures['UR'])
+    res['L'] = np.divide(measures['LL'], measures['LR'])
+    
+    return res
+
+
+def quadrant_analysis(data, pts, dataset='PMat', func=None):
+    
+    if not func:
+        func = np.mean
+    
+    res = {}
+    res['UL'], res['LL'] = [], []
+    res['UR'], res['LR'] = [], []
 
     pts_vert = pts['vert']
     pts_horiz = pts['horiz']
@@ -290,12 +354,12 @@ def quadrant_analysis(data, pts, dataset='PMat'):
         LL_flat = [item for sublist in LL_prs for item in sublist]
         LR_flat = [item for sublist in LR_prs for item in sublist]
         
-        means['UL'].append(np.mean(UL_flat))
-        means['UR'].append(np.mean(UR_flat))
-        means['LL'].append(np.mean(LL_flat))
-        means['LR'].append(np.mean(LR_flat))
+        res['UL'].append(func(UL_flat))
+        res['UR'].append(func(UR_flat))
+        res['LL'].append(func(LL_flat))
+        res['LR'].append(func(LR_flat))
 
-    return means
+    return res
 
 
 def load_pkl(fn):
